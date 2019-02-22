@@ -51,17 +51,17 @@ class AdtPulseClient:
 
     if 'CONF_COOKIEPATH' in globals():
         cookie_path = config.get(CONF_COOKIEPATH)
-	_LOGGER.debug(cookie_path)
+        _LOGGER.debug(cookie_path)
     else:
-	cookie_path = DEFAULT_COOKIEPATH
-	_LOGGER.debug(cookie_path)
+        cookie_path = DEFAULT_COOKIEPATH
+        _LOGGER.debug(cookie_path)
 		
-    def _save_cookies(requests_cookiejar, filename):
+    def _save_cookies(self, requests_cookiejar, filename):
         """Save cookies to a file."""
         with open(filename, 'wb') as handle:
             pickle.dump(requests_cookiejar, handle)
 
-    def _load_cookies(filename):
+    def _load_cookies(self, filename):
         """Load cookies from a file."""
         with open(filename, 'rb') as handle:
             return pickle.load(handle)
@@ -74,7 +74,7 @@ class AdtPulseClient:
         self._token = False
         self._cookie_path = cookie_path
 
-        self.authenticate(self, username, password, cookie_path)
+        self.authenticate(username, password, cookie_path)
 
     def authenticate(self, username, password, cookie_path):
         """login to the system"""
@@ -88,7 +88,7 @@ class AdtPulseClient:
         _LOGGER.warning('payload = %s', payload)
 
         if os.path.exists(cookie_path):
-            session.cookies = _load_cookies(cookie_path)     
+            session.cookies = self._load_cookies(cookie_path)     
 
         login = session.post(LOGIN_URL, data = payload)
         
@@ -110,7 +110,7 @@ class AdtPulseClient:
             Exception('Unable to login to portal.adtpulse.com')
             _LOGGER.warning('Unable to login to portal.adtpulse.com -- login_status_code = %s and cookies are = %s ! ', login.status_code, session.cookies)                
         
-        get_armed_status()
+        self.get_armed_status()
         
         return login
 
@@ -178,7 +178,8 @@ class AdtPulseClient:
     def get_armed_status(self, alarm_state_value=False):
         """Get the status of the panel"""
         _LOGGER.info('Retrieving alarm state from ADTPulse...')
-        _load_cookies('adtpulse_cookies.pickle')
+        if os.path.exists(cookie_path):
+            self._load_cookies('adtpulse_cookies.pickle')
 
         session = requests.session()
         dashboard = session.get(DASHBOARD_URL)
